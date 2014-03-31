@@ -513,6 +513,15 @@ typedef NS_ENUM(NSInteger, FCFieldType) {
     return result;
 }
 
++ (instancetype)firstInstanceJoinDistinct:(NSString *)queryAfterSELECT, ...
+{
+    va_list args;
+    va_start(args, queryAfterSELECT);
+    id result = [self _instances:queryAfterSELECT andArgs:args orArgsArray:nil orResultSet:nil onlyFirst:YES keyed:NO distinct:YES];
+    va_end(args);
+    return result;
+}
+
 + (NSArray *)instancesJoinDistinct:(NSString *)queryAfterSELECT, ...
 {
     va_list args;

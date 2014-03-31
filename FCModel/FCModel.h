@@ -119,6 +119,7 @@ typedef NS_ENUM(NSInteger, FCModelSaveResult) {
 + (instancetype)firstInstanceOrderedBy:(NSString *)queryAfterORDERBY, ...;
 + (NSArray *)instancesOrderedBy:(NSString *)queryAfterORDERBY, ...;
 
++ (instancetype)firstInstanceJoinDistinct:(NSString *)queryAfterSELECT, ...;
 + (NSArray *)instancesJoin:(NSString *)queryAfterSELECT, ...;
 + (NSArray *)instancesJoinDistinct:(NSString *)queryAfterSELECT, ...;
 
