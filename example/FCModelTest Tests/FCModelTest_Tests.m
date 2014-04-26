@@ -63,11 +63,87 @@
     }
     
     XCTAssertTrue([FCModel closeDatabase]);
+    XCTAssertTrue(! [FCModel databaseIsOpen]);
+    XCTAssertTrue([SimpleModel instanceWithPrimaryKey:@"a"] == nil);
+    XCTAssertThrows([SimpleModel executeUpdateQuery:@"UPDATE $T SET name = 'bogus'"]);
+
     [self openDatabase];
+    XCTAssertTrue([FCModel databaseIsOpen]);
     
     SimpleModel *entity2 = [SimpleModel instanceWithPrimaryKey:@"a"];
     XCTAssertTrue(entity2.existsInDatabase);
     XCTAssertTrue(entity2 != (__bridge SimpleModel *)(e1ptr));
+}
+
+- (void)testDateEncodingChangeMonitoring
+{
+    NSDate *date = [NSDate date];
+    SimpleModel *entity1 = [SimpleModel new];
+    entity1.date = date;
+    FCModelSaveResult saveResult1 = [entity1 save];
+    XCTAssertEqual(saveResult1, FCModelSaveSucceeded);
+    FCModelSaveResult saveResult2 = [entity1 save];
+    XCTAssertEqual(saveResult2, FCModelSaveNoChanges, @"Repeated saves should yield no changes");
+    
+    // actually changing the date should cause changes during save
+    entity1.date = [NSDate dateWithTimeIntervalSinceNow:1];
+    FCModelSaveResult saveResult3 = [entity1 save];
+    XCTAssertEqual(saveResult3, FCModelSaveSucceeded);
+}
+
+- (void)testMappingFieldInfo
+{
+    SimpleModel *entity = [SimpleModel new];
+    FCModelFieldInfo *info1 = [[entity class] infoForFieldName:@"uniqueID"];
+    FCModelFieldInfo *info2 = [[entity class] infoForFieldName:@"name"];
+    FCModelFieldInfo *info3 = [[entity class] infoForFieldName:@"lowercase"];
+    FCModelFieldInfo *info4 = [[entity class] infoForFieldName:@"mixedcase"];
+    FCModelFieldInfo *info5 = [[entity class] infoForFieldName:@"typelessTest"];
+    
+    XCTAssertEqual(info1.type, FCModelFieldTypeText);
+    XCTAssertEqual(info2.type, FCModelFieldTypeText);
+    XCTAssertEqual(info3.type, FCModelFieldTypeText);
+    XCTAssertEqual(info4.type, FCModelFieldTypeInteger);
+    XCTAssertEqual(info5.type, FCModelFieldTypeOther);
+}
+
+- (void)testFieldDefaultNull
+{
+    FCModelFieldInfo *fieldInfoUnspecified = [SimpleModel infoForFieldName:@"textDefaultUnspecified"];
+    FCModelFieldInfo *fieldInfoNullLiteral = [SimpleModel infoForFieldName:@"textDefaultNullLiteral"];
+    FCModelFieldInfo *fieldInfoNullString = [SimpleModel infoForFieldName:@"textDefaultNullString"];
+    
+    XCTAssertTrue(fieldInfoUnspecified.nullAllowed);
+    XCTAssertTrue(fieldInfoNullLiteral.nullAllowed);
+    XCTAssertTrue(fieldInfoNullString.nullAllowed);
+    XCTAssertTrue(fieldInfoUnspecified.defaultValue == nil);
+    XCTAssertTrue(fieldInfoNullLiteral.defaultValue == nil);
+    XCTAssertTrue([fieldInfoNullString.defaultValue isEqualToString:@"NULL"]);
+    
+    SimpleModel *entity = [SimpleModel new];
+    XCTAssertTrue(entity.textDefaultUnspecified == nil);
+    XCTAssertTrue(entity.textDefaultNullLiteral == nil);
+    XCTAssertTrue(entity.textDefaultNullString && [entity.textDefaultNullString isEqualToString:@"NULL"]);
+}
+
+- (void)testNullableNumberField
+{
+    FCModelFieldInfo *infoDefaultUnspecified = [SimpleModel infoForFieldName:@"nullableNumberDefaultUnspecified"];
+    FCModelFieldInfo *infoDefaultNull = [SimpleModel infoForFieldName:@"nullableNumberDefaultNull"];
+    FCModelFieldInfo *infoDefault1 = [SimpleModel infoForFieldName:@"nullableNumberDefault1"];
+    
+    XCTAssertTrue(infoDefaultUnspecified.nullAllowed);
+    XCTAssertTrue(infoDefaultNull.nullAllowed);
+    XCTAssertTrue(infoDefault1.nullAllowed);
+
+    XCTAssertTrue(infoDefaultUnspecified.defaultValue == nil);
+    XCTAssertTrue(infoDefaultNull.defaultValue == nil);
+    XCTAssertTrue([infoDefault1.defaultValue isEqual:@(1)]);
+    
+    SimpleModel *entity = [SimpleModel new];
+    XCTAssertTrue(entity.nullableNumberDefaultUnspecified == nil);
+    XCTAssertTrue(entity.nullableNumberDefaultNull == nil);
+    XCTAssertTrue([entity.nullableNumberDefault1 isEqual:@(1)]);
 }
 
 #pragma mark - Helper methods
@@ -90,6 +166,15 @@
                    @"CREATE TABLE SimpleModel ("
                    @"    uniqueID     TEXT PRIMARY KEY,"
                    @"    name         TEXT,"
+                   @"    date         DATETIME,"
+                   @"    textDefaultUnspecified TEXT,"
+                   @"    textDefaultNullLiteral TEXT DEFAULT NULL,"
+                   @"    textDefaultNullString  TEXT DEFAULT 'NULL',"
+                   @"    nullableNumberDefaultUnspecified INTEGER,"
+                   @"    nullableNumberDefaultNull INTEGER DEFAULT NULL,"
+                   @"    nullableNumberDefault1 INTEGER DEFAULT 1,"
+                   @"    lowercase         text,"
+                   @"    mixedcase         Integer NOT NULL,"
                    @"    typelessTest"
                    @");"
                    ]) failedAt(1);

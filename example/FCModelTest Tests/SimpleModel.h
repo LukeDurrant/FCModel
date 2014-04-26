@@ -12,6 +12,15 @@
 
 @property (nonatomic, copy) NSString *uniqueID;
 @property (nonatomic, copy) NSString *name;
+@property (nonatomic, copy) NSDate *date;
 @property (nonatomic) id typelessTest;
+@property (nonatomic) NSString *lowercase;
+@property (nonatomic) NSInteger mixedcase;
+@property (nonatomic) NSString *textDefaultUnspecified;
+@property (nonatomic) NSString *textDefaultNullString;
+@property (nonatomic) NSString *textDefaultNullLiteral;
+@property (nonatomic) NSNumber *nullableNumberDefaultUnspecified;
+@property (nonatomic) NSNumber *nullableNumberDefaultNull;
+@property (nonatomic) NSNumber *nullableNumberDefault1;
 
 @end

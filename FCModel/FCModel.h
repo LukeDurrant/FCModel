@@ -93,6 +93,7 @@ typedef NS_ENUM(NSInteger, FCModelSaveResult) {
 // CRUD basics
 + (instancetype)instanceWithPrimaryKey:(id)primaryKeyValue; // will create if nonexistent
 + (instancetype)instanceWithPrimaryKey:(id)primaryKeyValue createIfNonexistent:(BOOL)create; // will return nil if nonexistent
+- (NSArray *)changedFieldNames;
 - (void)revertUnsavedChanges;
 - (void)revertUnsavedChangeToFieldName:(NSString *)fieldName;
 - (FCModelSaveResult)delete;
@@ -149,7 +150,6 @@ typedef NS_ENUM(NSInteger, FCModelSaveResult) {
 
 // For subclasses to override, all optional:
 
-+ (NSString *)tableName; // By default, the class name is used
 - (void)didInit;
 - (BOOL)shouldInsert;
 - (BOOL)shouldUpdate;
@@ -243,6 +243,18 @@ typedef NS_ENUM(NSInteger, FCModelSaveResult) {
 // Returns YES if there were no resident FCModel instances.
 //
 + (BOOL)closeDatabase;
+
+// If you try to use FCModel while the database is closed, an error will be logged to the console on any relevant calls.
+// Read/info/SELECT methods will return nil when possible, but these will throw exceptions:
+//  -save
+//  +saveAll
+//  -delete
+//  -executeUpdateQuery:
+//  -inDatabaseSync:
+//
+// You can determine if the database is currently open:
+//
++ (BOOL)databaseIsOpen;
 
 @end
 
