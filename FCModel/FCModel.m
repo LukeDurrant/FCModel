@@ -413,7 +413,7 @@ static inline BOOL checkForOpenDatabaseFatal(BOOL fatal)
             {
                 for(NSString *column in [self databaseFieldNames])
                 {
-                    selectStatement = [selectStatement stringByAppendingFormat:@"%@.\"%@\", ", [self.class tableName], column];
+                    selectStatement = [selectStatement stringByAppendingFormat:@"%@.\"%@\", ", NSStringFromClass(self), column];
                 }
                 //Remove ,
                 selectStatement = [selectStatement substringToIndex:([selectStatement length]-2)];
@@ -536,11 +536,13 @@ static inline BOOL checkForOpenDatabaseFatal(BOOL fatal)
     
     if (primaryKeyValues.count == 0) return @[];
     
+    
     //Lets check that columnName exists in this model otherwise someone could be naughtily doing an SQL Injection
-    if([[self.class databaseFieldNames] containsObject:columName] == NO)
+    if([[self.class databaseFieldNames] containsObject:g_primaryKeyFieldName[self]] == NO)
     {
-        [[NSException exceptionWithName:NSInvalidArgumentException reason:[NSString stringWithFormat:@"Column (%@) doesn't exist in this model (%@)", columName, [self.class tableName]] userInfo:nil] raise];
+        [[NSException exceptionWithName:NSInvalidArgumentException reason:[NSString stringWithFormat:@"Column (%@) doesn't exist in this model (%@)", g_primaryKeyFieldName[self], NSStringFromClass(self.class)] userInfo:nil] raise];
     }
+    
     
     __block int maxParameterCount = 0;
     [self inDatabaseSync:^(FMDatabase *db) {
@@ -549,7 +551,7 @@ static inline BOOL checkForOpenDatabaseFatal(BOOL fatal)
     
     __block NSArray *allFoundInstances = nil;
     NSMutableArray *valuesArray = [NSMutableArray arrayWithCapacity:MIN(primaryKeyValues.count, maxParameterCount)];
-    NSMutableString *whereClause = [NSMutableString stringWithFormat:@"%@ IN (", columName];
+    NSMutableString *whereClause = [NSMutableString stringWithFormat:@"%@ IN (", g_primaryKeyFieldName[self]];
     
     void (^fetchChunk)() = ^{
         if (valuesArray.count == 0) return;

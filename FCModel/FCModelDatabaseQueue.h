@@ -5,7 +5,7 @@
 //  Copyright (c) 2014 Marco Arment. See included LICENSE file.
 //
 
-#import <Foundation/Foundation.h>
+@import Foundation;
 
 #ifdef COCOAPODS
 #import <FMDB/FMDatabase.h>
