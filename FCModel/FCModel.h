@@ -131,7 +131,6 @@ typedef NS_ENUM(NSInteger, FCModelSaveResult) {
 
 // Fetch a set of primary keys, i.e. "WHERE key IN (...)"
 + (NSArray *)instancesWithPrimaryKeyValues:(NSArray *)primaryKeyValues;
-+ (NSArray *)instancesWithColumnNameValues:(NSArray *)primaryKeyValues columName:(NSString*)columName;
 + (NSDictionary *)keyedInstancesWithPrimaryKeyValues:(NSArray *)primaryKeyValues;
 
 // Return data instead of completed objects (convenient accessors to FCModel's database queue with $T/$PK parsing)
